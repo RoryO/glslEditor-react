@@ -288,7 +288,7 @@ export default class GlslCanvas extends React.Component {
         if (nTextures) {
             let lines = this.props.fragmentString.split('\n');
             for (let line of lines) {
-                let match = line.match(/uniform\s*sampler2D\s*([\w]*);\s*\/\/\s*([\w|\:\/\/|\.|\-|\_]*)/i);
+                let match = line.match(/uniform\s*sampler2D\s*([\w]*);\s*\/\/\s*([\w|://|.|\-|_]*)/i);
                 if (match) {
                     let ext = match[2].split('.').pop().toLowerCase();
                     if (match[1] &&  match[2] &&
