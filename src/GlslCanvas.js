@@ -254,7 +254,7 @@ export default class GlslCanvas extends React.Component {
             }
         }
         this.textures = {};
-        for (let att of this.attribs) {
+        for (let att in this.attribs) {
             this.gl.deleteBuffer(this.attribs[att]);
         }
         this.gl.useProgram(null);
