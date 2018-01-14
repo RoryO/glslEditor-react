@@ -248,7 +248,7 @@ export default class GlslCanvas extends React.Component {
     destroy() {
         this.animated = false;
         this.isValid = false;
-        for (let tex of this.textures) {
+        for (let tex in this.textures) {
             if (tex.destroy){
                 tex.destroy()
             }
