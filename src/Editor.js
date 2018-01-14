@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { Controlled as CodeMirror } from 'react-codemirror2';
 import './Editor.css';
 
@@ -22,7 +22,7 @@ import 'codemirror/keymap/sublime';
 
 import 'codemirror/mode/clike/clike.js';
 
-const EMPTY_FRAG_SHADER = `// Author:
+export const EMPTY_FRAG_SHADER = `// Author:
 // Title:
 
 #ifdef GL_ES
@@ -54,20 +54,20 @@ const DEFAULT_OPTIONS = {
     lineWrapping: true,
 };
 
-export default class Editor extends Component {
+export default class Editor extends React.Component {
     static defaultProps = {
         options: DEFAULT_OPTIONS,
-        value: EMPTY_FRAG_SHADER
+        source: EMPTY_FRAG_SHADER
     }
 
     componentDidMount() {
-        this.props.handleSourceCodeUpdate(this.props.value);
+        this.props.handleSourceCodeUpdate(this.props.source);
     }
 
     render() {
         return (
         <CodeMirror
-            value={this.props.value}
+            value={this.props.source}
             options={this.props.options}
             onBeforeChange={(editor, data, value) => {
                 this.props.handleSourceCodeUpdate(value);

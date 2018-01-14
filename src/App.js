@@ -1,31 +1,37 @@
 import React from 'react';
-import Editor from './Editor.js';
+import Editor, { EMPTY_FRAG_SHADER } from './Editor.js';
 import Shader from './Shader.js';
 import './App.css';
 
 export default class App extends React.Component {
     handleSourceCodeUpdate = (updatedCode) => {
-        this.setState({ value: updatedCode });
+        this.setState({ source: updatedCode });
     }
 
     handleOptionsUpdate = (options) => {
         this.setState({ options: options });
     }
 
+    handleShaderError = (error) => {
+        this.setState({errors: error});
+    };
+
     constructor(props) {
         super(props);
-        this.state = { };
+        this.state = { source: EMPTY_FRAG_SHADER };
     }
 
     render() {
         return (
         <div className="App">
             <Editor
-                value={ this.state.value }
+                source={ this.state.source }
                 handleSourceCodeUpdate={ this.handleSourceCodeUpdate }
+                errors={ this.state.errors }
             />
             <Shader
-                source={ this.state.value }
+                source={ this.state.source }
+                handleShaderError={ this.handleShaderError }
             />
         </div>
         );
