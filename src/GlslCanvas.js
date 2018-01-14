@@ -161,6 +161,8 @@ export default class GlslCanvas extends React.Component {
     static defaultProps = {
         vertexString: DEFAULT_VERTEX_STRING,
         fragmentString: DEFAULT_FRAGMENT_STRING,
+        width: 500,
+        height: 500,
         webGlContextAttributes: {}
     }
 
@@ -174,14 +176,14 @@ export default class GlslCanvas extends React.Component {
     static ShaderCompileError = class extends Error {
         constructor(...args) {
             super(...args);
-            Error.captureStackTrace(this, GlslCanvas.ShaderCompilerError);
+            Error.captureStackTrace(this, GlslCanvas.ShaderCompileError);
         }
     }
 
-    static ShaderLinkerError = class extends Error {
+    static ShaderLinkError = class extends Error {
         constructor(...args) {
             super(...args);
-            Error.captureStackTrace(this, GlslCanvas.ShaderLinkerError);
+            Error.captureStackTrace(this, GlslCanvas.ShaderLinkError);
         }
     }
 
@@ -194,7 +196,13 @@ export default class GlslCanvas extends React.Component {
     }
 
     componentWillUnmount() {
+        this.destroy();
         cancelAnimationFrame(this.animationCallbackId);
+    }
+
+    componentDidUpdate(_prevProps, _prevState) {
+        this.createShaders();
+        this.forceRender = true;
     }
 
     constructor(props) {
@@ -508,7 +516,7 @@ export default class GlslCanvas extends React.Component {
             if (!compiled) {
                 const errorMessage = this.gl.getShaderInfoLog(shader);
                 this.gl.deleteShader(shader);
-                throw new GlslCanvas.ShaderCompilerError(errorMessage);
+                throw new GlslCanvas.ShaderCompileError(errorMessage);
             }
             this.gl.attachShader(program, shader);
             compiledShaders.push(shader);
@@ -519,7 +527,7 @@ export default class GlslCanvas extends React.Component {
         if (!linked) {
             const lastError = this.gl.getProgramInfoLog(program);
             this.gl.deleteProgram(program);
-            throw new GlslCanvas.ShaderLinkerError(lastError);
+            throw new GlslCanvas.ShaderLinkError(lastError);
         }
         this.gl.useProgram(program);
         this.program = program;
