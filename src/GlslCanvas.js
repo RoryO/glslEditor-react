@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Texture from './Texture';
-
+import './GlslCanvas.css';
 
 function isDiff(a, b) {
     if (a && b) {
@@ -169,6 +169,7 @@ export default class GlslCanvas extends React.Component {
     static NoWebGLError = class extends Error {
         constructor(...args) {
             super(...args);
+            this.name = 'NoWebGLError';
             Error.captureStackTrace(this, GlslCanvas.NoWebGLError);
         }
     }
@@ -176,6 +177,7 @@ export default class GlslCanvas extends React.Component {
     static ShaderCompileError = class extends Error {
         constructor(...args) {
             super(...args);
+            this.name = 'ShaderCompileError';
             Error.captureStackTrace(this, GlslCanvas.ShaderCompileError);
         }
     }
@@ -183,6 +185,7 @@ export default class GlslCanvas extends React.Component {
     static ShaderLinkError = class extends Error {
         constructor(...args) {
             super(...args);
+            this.name = 'ShaderLinkError';
             Error.captureStackTrace(this, GlslCanvas.ShaderLinkError);
         }
     }
@@ -201,8 +204,18 @@ export default class GlslCanvas extends React.Component {
     }
 
     componentDidUpdate(_prevProps, _prevState) {
-        this.createShaders();
-        this.forceRender = true;
+        try {
+            this.createShaders();
+            this.forceRender = true;
+        }
+        catch(e) {
+            if (e.name !== 'ShaderCompileError') {
+                throw(e);
+            }
+            if (this.props.handleShaderError) {
+                this.props.handleShaderError(e);
+            }
+        }
     }
 
     constructor(props) {

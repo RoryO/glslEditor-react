@@ -1,7 +1,8 @@
 import React from 'react';
 import Editor, { EMPTY_FRAG_SHADER } from './Editor.js';
-import Shader from './Shader.js';
+import GlslCanvas from './GlslCanvas.js';
 import './App.css';
+
 
 export default class App extends React.Component {
     handleSourceCodeUpdate = (updatedCode) => {
@@ -13,8 +14,7 @@ export default class App extends React.Component {
     }
 
     handleShaderError = (error) => {
-        this.setState({errors: error});
-    };
+    }
 
     constructor(props) {
         super(props);
@@ -29,8 +29,10 @@ export default class App extends React.Component {
                 handleSourceCodeUpdate={ this.handleSourceCodeUpdate }
                 errors={ this.state.errors }
             />
-            <Shader
-                source={ this.state.source }
+            <GlslCanvas
+                width="500"
+                height="500"
+                fragmentString={ this.state.source }
                 handleShaderError={ this.handleShaderError }
             />
         </div>
