@@ -156,6 +156,8 @@ void main(){
 `;
 
 export default class GlslCanvas extends React.Component {
+    static version = 1.0;
+
     static defaultProps = {
         vertexString: DEFAULT_VERTEX_STRING,
         fragmentString: DEFAULT_FRAGMENT_STRING,
@@ -254,9 +256,7 @@ export default class GlslCanvas extends React.Component {
     }
 
     load() {
-        if(!this.props.fragmentString) { return; }
-
-        this.animated = false;
+        this.animated = true;
         this.nDelta = (this.props.fragmentString.match(/u_delta/g) || []).length;
         this.nTime = (this.props.fragmentString.match(/u_time/g) || []).length;
         this.nDate = (this.props.fragmentString.match(/u_date/g) || []).length;
@@ -320,10 +320,6 @@ export default class GlslCanvas extends React.Component {
             });
         }
 
-    }
-
-    refreshUniforms() {
-        this.uniforms = {};
     }
 
     setUniform(name, ...value) {
@@ -445,33 +441,24 @@ export default class GlslCanvas extends React.Component {
             // set the resolution uniform
             this.uniform('2f', 'vec2', 'u_resolution', this.canvas.width, this.canvas.height);
 
-            this.texureIndex = 0;
-            console.log(this.textures);
             for (const texture in this.textures) {
                 this.uniformTexture(texture);
             }
 
-            // Draw the rectangle.
             this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
-
-            // Trigger event
-            // this.trigger('render', {});
 
             this.change = false;
             this.forceRender = false;
         }
+        this.animationCallbackId = requestAnimationFrame(this.renderCanvas.bind(this));
     }
 
-    pause () {
+    pause() {
         this.paused = true;
     }
 
-    play () {
+    play() {
         this.paused = false;
-    }
-
-    version() {
-        return '1.0';
     }
 
     create3DContext(optAttribs) {
