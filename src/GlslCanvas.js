@@ -1,14 +1,8 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 import Texture from './Texture';
+import Controls from './Controls';
+import Uniform from './Uniform';
 import './GlslCanvas.css';
-
-function isDiff(a, b) {
-    if (a && b) {
-        return a.toString() !== b.toString();
-    }
-    return false;
-}
 
 // By Brett Camber on
 // https://github.com/tangrams/tangram/blob/master/src/gl/glsl.js
@@ -190,12 +184,15 @@ export default class GlslCanvas extends React.Component {
         }
     }
 
+    togglePlay = (e) => {
+        this.setState({paused: !this.state.paused});
+    }
+
     componentDidMount() {
-        this.canvas = ReactDOM.findDOMNode(this);
         this.create3DContext(this.props.webglContextCreationAttirbutes);
         this.load();
         this.setVertexBuffer();
-        this.animationCallbackId = requestAnimationFrame(this.renderCanvas.bind(this));
+        this.animationCallbackId = requestAnimationFrame(this.everyFrame);
     }
 
     componentWillUnmount() {
@@ -223,18 +220,20 @@ export default class GlslCanvas extends React.Component {
         if (window && !window.WebGLRenderingContext) {
             throw new GlslCanvas.NoWebGLError();
         }
+        let now = performance.now();
+
+        this.state = {
+            paused: false,
+            timeDelta: 0.,
+            timePrev: now,
+            timeLoad: now
+        }
 
         this.isValid = false
-        this.program = null;
+        this.forceRender = true;
         this.textures = {};
         this.uniforms = {};
         this.vbo = {};
-
-        this.timeLoad = this.timePrev = performance.now();
-        this.timeDelta = 0.;
-        this.forceRender = true;
-        this.paused = false;
-
 
         // ========================== EVENTS
         /* let mouse = {
@@ -259,7 +258,6 @@ export default class GlslCanvas extends React.Component {
     }
 
     destroy() {
-        this.animated = false;
         this.isValid = false;
         for (let tex in this.textures) {
             if (tex.destroy){
@@ -277,13 +275,6 @@ export default class GlslCanvas extends React.Component {
     }
 
     load() {
-        this.animated = true;
-        this.nDelta = (this.props.fragmentString.match(/u_delta/g) || []).length;
-        this.nTime = (this.props.fragmentString.match(/u_time/g) || []).length;
-        this.nDate = (this.props.fragmentString.match(/u_date/g) || []).length;
-        this.nMouse = (this.props.fragmentString.match(/u_mouse/g) || []).length;
-        this.animated = this.nDate > 1 || this.nTime > 1 || this.nMouse > 1;
-
         let nTextures = this.props.fragmentString.search(/sampler2D/g);
         if (nTextures) {
             let lines = this.props.fragmentString.split('\n');
@@ -344,23 +335,18 @@ export default class GlslCanvas extends React.Component {
     }
 
     setUniform(name, ...value) {
-        let u = {};
-        u[name] = value;
-        this.setUniforms(u);
-    }
-
-    setUniforms(uniforms) {
-        let parsed = parseUniforms(uniforms);
+        let obj = {};
+        obj[name] = value;
+        let parsed = parseUniforms(obj);
         // Set each uniform
-        for (let u in parsed) {
-            if (parsed[u].type === 'sampler2D') {
+        for (let u of parsed) {
+            if (u.type === 'sampler2D') {
                 // For textures, we need to track texture units, so we have a special setter
                 // this.uniformTexture(parsed[u].name, parsed[u].value[0]);
-                this.loadTexture(parsed[u].name, parsed[u].value[0]);
+                this.loadTexture(u.name, u.value[0]);
             }
             else {
-                this.uniform(parsed[u].method, parsed[u].type, parsed[u].name, parsed[u].value);
-                this.forceRender = true;
+                this.uniform(u.method, u.type, u.name, u.value);
             }
         }
     }
@@ -379,15 +365,16 @@ export default class GlslCanvas extends React.Component {
     uniform(method, type, name, ...value) { // 'value' is a method-appropriate arguments list
         this.uniforms[name] = this.uniforms[name] || {};
         let uniform = this.uniforms[name];
-        let change = isDiff(uniform.value, value);
-        if (change || this.change || uniform.location === undefined || uniform.value === undefined) {
+        if (this.forceRender = true ||
+            uniform.location === undefined ||
+            uniform.value === undefined) {
             uniform.name = name;
             uniform.value = value;
             uniform.type = type;
             uniform.method = 'uniform' + method;
             uniform.location = this.gl.getUniformLocation(this.program, name);
-
             this.gl[uniform.method].apply(this.gl, [uniform.location].concat(uniform.value));
+            this.forceRender = true;
         }
     }
 
@@ -433,53 +420,19 @@ export default class GlslCanvas extends React.Component {
     }
 
     get shouldRenderFrame() {
-        return this.forceRender || (this.animated &&
-                                    this.isCanvasVisible &&
-                                    !this.paused)
+        return this.forceRender || (this.isCanvasVisible &&
+                                    !this.state.paused)
     }
 
-    renderCanvas () {
-        if (this.shouldRenderFrame) {
-            let date = new Date();
-            let now = performance.now();
-            this.timeDelta =  (now - this.timePrev) / 1000.0;
-            this.timePrev = now;
-            if (this.nDelta > 1) {
-                // set the delta time uniform
-                this.uniform('1f', 'float', 'u_delta', this.timeDelta);
-            }
-
-            if (this.nTime > 1 ) {
-                // set the elapsed time uniform
-                this.uniform('1f', 'float', 'u_time', (now - this.timeLoad) / 1000.0);
-            }
-
-            if (this.nDate) {
-                // Set date uniform: year/month/day/time_in_sec
-                this.uniform('4f', 'float', 'u_date', date.getFullYear(), date.getMonth(), date.getDate(), date.getHours()*3600 + date.getMinutes()*60 + date.getSeconds() + date.getMilliseconds() * 0.001 );
-            }
-
-            // set the resolution uniform
-            this.uniform('2f', 'vec2', 'u_resolution', this.canvas.width, this.canvas.height);
-
-            for (const texture in this.textures) {
-                this.uniformTexture(texture);
-            }
-
-            this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
-
-            this.change = false;
-            this.forceRender = false;
+    renderCanvas() {
+        for (const texture in this.textures) {
+            this.uniformTexture(texture);
         }
-        this.animationCallbackId = requestAnimationFrame(this.renderCanvas.bind(this));
-    }
 
-    pause() {
-        this.paused = true;
-    }
+        this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
 
-    play() {
-        this.paused = false;
+        this.change = false;
+        this.forceRender = false;
     }
 
     create3DContext(optAttribs) {
@@ -549,13 +502,47 @@ export default class GlslCanvas extends React.Component {
         }
     }
 
+    everyFrame = () => {
+        this.animationCallbackId = requestAnimationFrame(this.everyFrame);
+        if (!this.shouldRenderFrame) {
+            return;
+        }
+        this.updateDefaultUniforms();
+        this.renderCanvas();
+    }
+
+    updateDefaultUniforms() {
+        let date = new Date();
+        let now = performance.now();
+        this.setState({timeDelta: (now - this.state.timePrev) / 1000.0});
+        this.setState({timePrev: now});
+        this.uniform('1f', 'float', 'u_delta', this.state.timeDelta);
+        this.uniform('1f', 'float', 'u_time', (now - this.state.timeLoad) / 1000.0);
+        this.uniform('2f', 'vec2', 'u_resolution', this.canvas.width, this.canvas.height);
+        this.uniform('4f', 'float', 'u_date',
+                     date.getFullYear(),
+                     date.getMonth(),
+                     date.getDate(),
+                     date.getHours()*3600 +
+                     date.getMinutes()*60 +
+                     date.getSeconds() +
+                     date.getMilliseconds() * 0.001 );
+    }
+
     render() {
         return(
-        <canvas
-            className="glslCanvas"
-            width={this.props.width}
-            height={this.props.height}
-        />
+        <div className="glslCanvas">
+            <Controls
+              toggleCallback={this.togglePlay}
+              paused={this.state.paused}
+            />
+            <canvas
+                width={this.props.width}
+                height={this.props.height}
+                ref={(me) => { this.canvas = me; }}
+            >
+            </canvas>
+        </div>
         )
     }
 }
