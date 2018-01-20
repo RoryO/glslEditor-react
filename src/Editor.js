@@ -22,27 +22,6 @@ import 'codemirror/keymap/sublime';
 
 import 'codemirror/mode/clike/clike.js';
 
-export const EMPTY_FRAG_SHADER = `// Author:
-// Title:
-
-#ifdef GL_ES
-precision mediump float;
-#endif
-
-uniform vec2 u_resolution;
-uniform vec2 u_mouse;
-uniform float u_time;
-
-void main() {
-    vec2 st = gl_FragCoord.xy/u_resolution.xy;
-    st.x *= u_resolution.x/u_resolution.y;
-
-    vec3 color = vec3(0.);
-    color = vec3(st.x,st.y,abs(sin(u_time)));
-
-    gl_FragColor = vec4(color,1.0);
-}`;
-
 const DEFAULT_OPTIONS = {
     viewportMargin: Infinity,
     mode: 'x-shader/x-fragment',
@@ -57,7 +36,7 @@ const DEFAULT_OPTIONS = {
 export default class Editor extends React.Component {
     static defaultProps = {
         options: DEFAULT_OPTIONS,
-        source: EMPTY_FRAG_SHADER
+        source: ''
     }
 
     componentDidMount() {
