@@ -1,0 +1,19 @@
+.shaderControls {
+    display: flex;
+    position: absolute;
+    bottom: 16px;
+    width: 100%;
+    margin: auto;
+    padding: 0;
+    color: white;
+}
+
+.shaderControls ul {
+    list-style: none;
+    margin: auto;
+}
+
+.shaderControls ul li i{
+    text-align: center;
+    font-size: 36px;
+}
