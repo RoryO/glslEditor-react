@@ -1,5 +1,6 @@
 import React from 'react';
 import { Controlled as CodeMirror } from 'react-codemirror2';
+import { isEmpty } from 'lodash';
 import './Editor.css';
 
 import 'codemirror/addon/search/search';
@@ -36,11 +37,30 @@ const DEFAULT_OPTIONS = {
 export default class Editor extends React.Component {
     static defaultProps = {
         options: DEFAULT_OPTIONS,
-        source: ''
+        source: '',
+        error: null
     }
 
     componentDidMount() {
         this.props.handleSourceCodeUpdate(this.props.source);
+    }
+
+    constructor(props) {
+        super(props);
+        this.errorWidgets = [];
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if(nextProps.error === this.props.error) { return; }
+        if(this.errorWidget) { this.errorWidget.clear(); }
+        if(isEmpty(nextProps.error)) { return; }
+
+        let wrapper = document.createElement('div');
+        wrapper.innerHTML = `<span class="cm-error" >${nextProps.error.shaderErrorMessage}</span>`;
+        this.errorWidget = this.instance.editor.addLineWidget(
+            nextProps.error.lineNumber - 1,
+            wrapper
+        );
     }
 
     render() {
@@ -53,6 +73,7 @@ export default class Editor extends React.Component {
             }}
             onChange={(editor, data, value) => {
             }}
+            ref={ (me) => { this.instance = me } }
         />
         );
     }

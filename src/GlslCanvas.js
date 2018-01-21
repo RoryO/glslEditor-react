@@ -1,7 +1,6 @@
 import React from 'react';
 import Texture from './Texture';
 import Controls from './Controls';
-import Uniform from './Uniform';
 import './GlslCanvas.css';
 
 // By Brett Camber on
@@ -150,8 +149,6 @@ void main(){
 `;
 
 export default class GlslCanvas extends React.Component {
-    static version = 1.0;
-
     static defaultProps = {
         vertexString: DEFAULT_VERTEX_STRING,
         fragmentString: DEFAULT_FRAGMENT_STRING,
@@ -168,19 +165,29 @@ export default class GlslCanvas extends React.Component {
         }
     }
 
-    static ShaderCompileError = class extends Error {
-        constructor(...args) {
-            super(...args);
-            this.name = 'ShaderCompileError';
-            Error.captureStackTrace(this, GlslCanvas.ShaderCompileError);
-        }
-    }
-
     static ShaderLinkError = class extends Error {
         constructor(...args) {
             super(...args);
             this.name = 'ShaderLinkError';
             Error.captureStackTrace(this, GlslCanvas.ShaderLinkError);
+        }
+    }
+
+    static ShaderCompileError = class extends Error {
+        parseErrorMessage = (message) => {
+            let parseRegex = /ERROR:\s+(\d+):(\d+):\s+('.*)/g;
+            let match = parseRegex.exec(message);
+            if (!match) { return; }
+            this.columnNumber = parseInt(match[1], 10);
+            this.lineNumber = parseInt(match[2], 10);
+            this.shaderErrorMessage = match[3];
+        }
+
+        constructor(...args) {
+            super(...args);
+            this.name = 'ShaderCompileError';
+            this.parseErrorMessage(args[0]);
+            Error.captureStackTrace(this, GlslCanvas.ShaderCompileError);
         }
     }
 
@@ -200,18 +207,32 @@ export default class GlslCanvas extends React.Component {
         cancelAnimationFrame(this.animationCallbackId);
     }
 
-    componentDidUpdate(_prevProps, _prevState) {
+    componentDidUpdate() {
+        if(!this.mustCompileShaders) { return; }
         try {
             this.createShaders();
+            if (this.props.handleShaderErrorState) {
+                this.props.handleShaderErrorState(null);
+            }
             this.forceRender = true;
         }
         catch(e) {
             if (e.name !== 'ShaderCompileError') {
                 throw(e);
             }
-            if (this.props.handleShaderError) {
-                this.props.handleShaderError(e);
+            if (this.props.handleShaderErrorState) {
+                this.props.handleShaderErrorState(e);
             }
+        }
+        finally {
+            this.mustCompileShaders = false;
+        }
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.fragmentString !== this.props.fragmentString ||
+            nextProps.vertexString !== this.props.vertexString) {
+            this.mustCompileShaders = true;
         }
     }
 
@@ -234,27 +255,6 @@ export default class GlslCanvas extends React.Component {
         this.textures = {};
         this.uniforms = {};
         this.vbo = {};
-
-        // ========================== EVENTS
-        /* let mouse = {
-         *     x: 0,
-         *     y: 0
-         * };
-         */
-        //let sandbox = this;
-        /* function RenderLoop() {
-         *     if (!sandbox.gl) {
-         *         return
-         *     }
-         *     if (sandbox.nMouse > 1) {
-         *         sandbox.setMouse(mouse);
-         *     }
-         *     sandbox.renderCanvas();
-         *     sandbox.forceRender = sandbox.resize();
-         * }
-         */
-        // Start
-        // this.setMouse({ x: 0, y: 0 });
     }
 
     destroy() {
@@ -365,17 +365,12 @@ export default class GlslCanvas extends React.Component {
     uniform(method, type, name, ...value) { // 'value' is a method-appropriate arguments list
         this.uniforms[name] = this.uniforms[name] || {};
         let uniform = this.uniforms[name];
-        if (this.forceRender = true ||
-            uniform.location === undefined ||
-            uniform.value === undefined) {
             uniform.name = name;
             uniform.value = value;
             uniform.type = type;
             uniform.method = 'uniform' + method;
             uniform.location = this.gl.getUniformLocation(this.program, name);
             this.gl[uniform.method].apply(this.gl, [uniform.location].concat(uniform.value));
-            this.forceRender = true;
-        }
     }
 
     uniformTexture(name, texture, options) {
@@ -464,9 +459,6 @@ export default class GlslCanvas extends React.Component {
             (this.canvas.getBoundingClientRect().top < (window.innerHeight || document.documentElement.clientHeight));
     }
 
-/*
-    *	Create a Vertex of a specific type (gl.VERTEX_SHADER/)
-    */
     createShaders() {
         const program = this.gl.createProgram();
         const compiledShaders = [];
@@ -500,13 +492,12 @@ export default class GlslCanvas extends React.Component {
         for (let s of compiledShaders) {
             this.gl.deleteShader(s);
         }
+
     }
 
     everyFrame = () => {
         this.animationCallbackId = requestAnimationFrame(this.everyFrame);
-        if (!this.shouldRenderFrame) {
-            return;
-        }
+        if (!this.shouldRenderFrame) { return; }
         this.updateDefaultUniforms();
         this.renderCanvas();
     }

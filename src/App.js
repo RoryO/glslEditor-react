@@ -34,12 +34,30 @@ export default class App extends React.Component {
         this.setState({ options: options });
     }
 
-    handleShaderError = (error) => {
+    handleShaderErrorState = (e) => {
+        this.setState({ error: e });
     }
 
     constructor(props) {
         super(props);
         this.state = { source: DEFAULT_FRAG_SHADER };
+    }
+
+    addError(args) {
+        /* let re = /ERROR:\s+\d+:(\d+):\s+('.*)/g;
+         * let matches = re.exec(args.error);
+         * if (matches) {
+         *     let line = parseInt(matches[1]) - 1;
+         *     let er = matches[2];
+         *     let msg = document.createElement('div');
+
+         *     let icon = msg.appendChild(document.createElement('span'));
+         *     icon.className = 'ge-error-icon';
+         *     icon.innerHTML = 'x';
+         *     msg.appendChild(document.createTextNode(er));
+         *     msg.className = 'ge-error';
+         *     this.widgets.push(this.main.editor.addLineWidget(line, msg));//, { coverGutter: false, noHScroll: true }));
+         * }*/
     }
 
     render() {
@@ -48,13 +66,13 @@ export default class App extends React.Component {
             <Editor
                 source={ this.state.source }
                 handleSourceCodeUpdate={ this.handleSourceCodeUpdate }
-                errors={ this.state.errors }
+                error={ this.state.error }
             />
             <GlslCanvas
                 width="500"
                 height="500"
                 fragmentString={ this.state.source }
-                handleShaderError={ this.handleShaderError }
+                handleShaderErrorState={ this.handleShaderErrorState }
             />
         </div>
         );
