@@ -38,9 +38,23 @@ export default class App extends React.Component {
         this.setState({ error: e });
     }
 
+    autosave = () => {
+        this.storage.autosave = this.state.source;
+        window.setTimeout(this.autosave, 120000);
+    }
+
     constructor(props) {
         super(props);
+        // need a valid shader on the first frame. otherwise we crash because the
+        // handler for the shader compiler editor is not set up yet.
         this.state = { source: DEFAULT_FRAG_SHADER };
+    }
+
+    componentDidMount() {
+        this.storage = window.localStorage;
+        const initialState = this.storage.autosave ? this.storage.autosave : DEFAULT_FRAG_SHADER;
+        this.setState({ source: initialState });
+        window.setTimeout(this.autosave, 120000);
     }
 
     addError(args) {
