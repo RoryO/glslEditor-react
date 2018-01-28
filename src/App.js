@@ -57,23 +57,6 @@ export default class App extends React.Component {
         window.setTimeout(this.autosave, 120000);
     }
 
-    addError(args) {
-        /* let re = /ERROR:\s+\d+:(\d+):\s+('.*)/g;
-         * let matches = re.exec(args.error);
-         * if (matches) {
-         *     let line = parseInt(matches[1]) - 1;
-         *     let er = matches[2];
-         *     let msg = document.createElement('div');
-
-         *     let icon = msg.appendChild(document.createElement('span'));
-         *     icon.className = 'ge-error-icon';
-         *     icon.innerHTML = 'x';
-         *     msg.appendChild(document.createTextNode(er));
-         *     msg.className = 'ge-error';
-         *     this.widgets.push(this.main.editor.addLineWidget(line, msg));//, { coverGutter: false, noHScroll: true }));
-         * }*/
-    }
-
     render() {
         return (
         <div className="App">
