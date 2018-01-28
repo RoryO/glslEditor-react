@@ -218,8 +218,22 @@ export default class GlslCanvas extends React.Component {
         cancelAnimationFrame(this.animationCallbackId);
     }
 
+    shouldComponentUpdate(nextProps, _nextState) {
+        return (nextProps.fragmentString !== this.props.fragmentString ||
+                nextProps.vertexString !== this.props.vertexString)
+    }
+
     componentDidUpdate() {
-        if(!this.mustCompileShaders) { return; }
+        if (this.shouldCompileImmediate) {
+            this.compileAndCreateShaders();
+        }
+        else {
+            if (this.compileTimerId) { window.clearTimeout(this.compileTimerId); }
+            this.compileTimerId = window.setTimeout(this.compileAndCreateShaders, 750);
+        }
+    }
+
+    compileAndCreateShaders = () => {
         try {
             this.createShaders();
             if (this.props.handleShaderErrorState) {
@@ -236,14 +250,7 @@ export default class GlslCanvas extends React.Component {
             }
         }
         finally {
-            this.mustCompileShaders = false;
-        }
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.fragmentString !== this.props.fragmentString ||
-            nextProps.vertexString !== this.props.vertexString) {
-            this.mustCompileShaders = true;
+            this.readyToCompile = false;
         }
     }
 
@@ -428,6 +435,16 @@ export default class GlslCanvas extends React.Component {
     get shouldRenderFrame() {
         return this.forceRender || (this.isCanvasVisible &&
                                     !this.state.paused)
+    }
+
+    get shouldCompileImmediate() {
+        return this.shouldCompile &&
+               (this.props.lastCharacter === ';' ||
+               this.props.lastCharacter === '}');
+    }
+
+    get shouldCompile() {
+        return !this.paused;
     }
 
     renderCanvas() {
