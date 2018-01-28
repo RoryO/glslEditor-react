@@ -175,11 +175,19 @@ export default class GlslCanvas extends React.Component {
 
     static ShaderCompileError = class extends Error {
         parseErrorMessage = (message) => {
-            let parseRegex = /ERROR:\s+(\d+):(\d+):\s+('.*)/g;
+            // deconstructs the string pattern of
+            // ERROR: column:line : message
+            // Upon strange errors, like encoding errors, column or line
+            // may be a ? character
+            let parseRegex = /ERROR:\s+([\d+|\?]):(\d+|\?)\s?:\s+('.*)/g;
             let match = parseRegex.exec(message);
-            if (!match) { return; }
-            this.columnNumber = parseInt(match[1], 10);
-            this.lineNumber = parseInt(match[2], 10);
+            if (!match) {
+                throw new TypeError(`Could not deconstruct WebGL error message: ${message}`);
+            }
+            // JS loose equality is okay here using ||. If parseInt is 0 then
+            // we want to default to 1.
+            this.columnNumber = parseInt(match[1], 10) || 1;
+            this.lineNumber = parseInt(match[2], 10) || 1;
             this.shaderErrorMessage = match[3];
         }
 
