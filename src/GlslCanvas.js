@@ -179,7 +179,10 @@ export default class GlslCanvas extends React.Component {
             // ERROR: column:line : message
             // Upon strange errors, like encoding errors, column or line
             // may be a ? character
+            // eslint is incorrect here. question marks must be escaped in regex.
+            /* eslint-disable no-useless-escape */
             let parseRegex = /ERROR:\s+([\d+|\?]):(\d+|\?)\s?:\s+('.*)/g;
+            /* eslint-enable no-useless-escape */
             let match = parseRegex.exec(message);
             if (!match) {
                 throw new TypeError(`Could not deconstruct WebGL error message: ${message}`);
