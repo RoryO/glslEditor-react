@@ -249,9 +249,6 @@ export default class GlslCanvas extends React.Component {
                 this.props.handleShaderErrorState(e);
             }
         }
-        finally {
-            this.readyToCompile = false;
-        }
     }
 
     constructor(props) {
