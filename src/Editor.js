@@ -1,6 +1,6 @@
 import React from 'react';
 import { Controlled as CodeMirror } from 'react-codemirror2';
-import { isEmpty } from 'lodash';
+import { isEmpty, last } from 'lodash';
 import 'codemirror/addon/hint/show-hint.css';
 import './Editor.css';
 
@@ -47,7 +47,7 @@ export default class Editor extends React.Component {
     }
 
     componentDidMount() {
-        this.props.handleSourceCodeUpdate(this.props.source);
+        this.props.handleSourceCodeUpdate(this.props.source, null);
     }
 
     constructor(props) {
@@ -74,7 +74,7 @@ export default class Editor extends React.Component {
             value={this.props.source}
             options={this.props.options}
             onBeforeChange={(editor, data, value) => {
-                this.props.handleSourceCodeUpdate(value);
+                this.props.handleSourceCodeUpdate(value, last(data.text));
             }}
             onChange={(editor, data, value) => {
             }}

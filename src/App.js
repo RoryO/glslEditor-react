@@ -26,8 +26,8 @@ void main() {
 }`;
 
 export default class App extends React.Component {
-    handleSourceCodeUpdate = (updatedCode) => {
-        this.setState({ source: updatedCode });
+    handleSourceCodeUpdate = (updatedCode, lastCharacterInput) => {
+        this.setState({ source: updatedCode, lastCharacter: lastCharacterInput });
     }
 
     handleOptionsUpdate = (options) => {
@@ -53,25 +53,10 @@ export default class App extends React.Component {
     componentDidMount() {
         this.storage = window.localStorage;
         const initialState = this.storage.autosave ? this.storage.autosave : DEFAULT_FRAG_SHADER;
-        this.setState({ source: initialState });
+        // lastCharacter is ; as a hack to force first frame render
+        // temporary until we have control of forcing a compile from the outside
+        this.setState({ source: initialState, lastCharacter: ';' });
         window.setTimeout(this.autosave, 120000);
-    }
-
-    addError(args) {
-        /* let re = /ERROR:\s+\d+:(\d+):\s+('.*)/g;
-         * let matches = re.exec(args.error);
-         * if (matches) {
-         *     let line = parseInt(matches[1]) - 1;
-         *     let er = matches[2];
-         *     let msg = document.createElement('div');
-
-         *     let icon = msg.appendChild(document.createElement('span'));
-         *     icon.className = 'ge-error-icon';
-         *     icon.innerHTML = 'x';
-         *     msg.appendChild(document.createTextNode(er));
-         *     msg.className = 'ge-error';
-         *     this.widgets.push(this.main.editor.addLineWidget(line, msg));//, { coverGutter: false, noHScroll: true }));
-         * }*/
     }
 
     render() {
@@ -86,6 +71,7 @@ export default class App extends React.Component {
                 width="500"
                 height="500"
                 fragmentString={ this.state.source }
+                lastCharacter={ this.state.lastCharacter }
                 handleShaderErrorState={ this.handleShaderErrorState }
             />
         </div>
