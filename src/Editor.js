@@ -1,6 +1,7 @@
 import React from 'react';
 import { Controlled as CodeMirror } from 'react-codemirror2';
 import { isEmpty } from 'lodash';
+import 'codemirror/addon/hint/show-hint.css';
 import './Editor.css';
 
 import 'codemirror/addon/search/search';
@@ -14,7 +15,7 @@ import 'codemirror/addon/fold/foldcode';
 import 'codemirror/addon/fold/foldgutter';
 import 'codemirror/addon/fold/indent-fold';
 import 'codemirror/addon/hint/show-hint';
-import 'codemirror/addon/hint/javascript-hint';
+import 'codemirror/addon/hint/anyword-hint';
 import 'codemirror/addon/display/rulers';
 import 'codemirror/addon/display/panel';
 import 'codemirror/mode/javascript/javascript';
@@ -32,6 +33,10 @@ const DEFAULT_OPTIONS = {
     gutters: ['CodeMirror-linenumbers', 'breakpoints'],
     extraKeys: { 'Ctrl-Space': 'autocomplete' },
     lineWrapping: true,
+    indentUnit: 4,
+    tabSize: 4,
+    indentWithTabs: false,
+    autofocus: true
 };
 
 export default class Editor extends React.Component {
