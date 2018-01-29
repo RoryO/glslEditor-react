@@ -553,9 +553,13 @@ export default class GlslCanvas extends React.Component {
               paused={this.state.paused}
             />
             <canvas
-                width={this.props.width}
-                height={this.props.height}
+                width={this.props.width * this.props.overSample}
+                height={this.props.height * this.props.overSample}
                 ref={(me) => { this.canvas = me; }}
+                style={{
+                    width: `${this.props.width}px`,
+                    height: `${this.props.height}px`
+                }}
             >
             </canvas>
         </div>

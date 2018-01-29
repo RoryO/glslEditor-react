@@ -68,8 +68,9 @@ export default class App extends React.Component {
                 error={ this.state.error }
             />
             <GlslCanvas
-                width="500"
-                height="500"
+                width="800"
+                height="1000"
+                overSample="2"
                 fragmentString={ this.state.source }
                 lastCharacter={ this.state.lastCharacter }
                 handleShaderErrorState={ this.handleShaderErrorState }
