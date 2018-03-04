@@ -69,7 +69,6 @@ const reducer = (state, action) => {
 const store = createStore(reducer, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
 
 const autosave = () => {
-    debugger
     window.localStorage.autosave = store.getState().source;
     window.setTimeout(this.autosave, 120000);
 }
