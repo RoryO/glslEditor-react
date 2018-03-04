@@ -46,10 +46,6 @@ export default class Editor extends React.Component {
         error: null
     }
 
-    componentDidMount() {
-        this.props.handleSourceCodeUpdate(this.props.source, null);
-    }
-
     constructor(props) {
         super(props);
         this.errorWidgets = [];

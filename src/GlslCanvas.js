@@ -140,9 +140,6 @@ const DEFAULT_FRAGMENT_STRING = `
 precision mediump float;
 #endif
 
-varying vec2 v_texcoord
-
-
 void main(){
     gl_FragColor = vec4(0.0);
 }
