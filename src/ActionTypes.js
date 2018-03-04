@@ -1,0 +1,3 @@
+export const SOURCE_UPDATE = 'SOURCE_UPDATE';
+export const ERROR_UPDATE = 'ERROR_UPDATE';
+export const OPTIONS_UPDATE = 'OPTIONS_UPDATE';
