@@ -1,8 +1,12 @@
 import React from 'react';
-import Editor from './Editor.js';
-import GlslCanvas from './GlslCanvas.js';
-import './App.css';
+import { Provider } from 'react-redux';
+import { createStore } from 'redux';
 
+import EditorContainer from './containers/EditorContainer';
+import GlslCanvasContainer from './containers/GlslCanvasContainer';
+import * as ActionTypes from './ActionTypes';
+
+import './App.css';
 
 const DEFAULT_FRAG_SHADER = `// Author:
 // Title:
@@ -25,57 +29,60 @@ void main() {
     gl_FragColor = vec4(color,1.0);
 }`;
 
-export default class App extends React.Component {
-    handleSourceCodeUpdate = (updatedCode, lastCharacterInput) => {
-        this.setState({ source: updatedCode, lastCharacter: lastCharacterInput });
+const initialState = {
+    source: window.localStorage.autosave ? window.localStorage.autosave : DEFAULT_FRAG_SHADER,
+    lastCharacter: '',
+    error: null,
+    canvasOptions: {
+        width: 800,
+        height: 1000,
+        overSample: 2
+    }
+};
+
+const reducer = (state, action) => {
+    if (typeof state === 'undefined') { return initialState; }
+    switch(action.type) {
+        case ActionTypes.SOURCE_UPDATE:
+            return Object.assign({}, state, {
+                source: action.source,
+                lastCharacter: action.lastCharacter
+            });
+        case ActionTypes.OPTIONS_UPDATE:
+            return Object.assign({}, state, {
+                canvasOptions: {
+                    width: action.width,
+                    height: action.height,
+                    overSample: action.overSample
+                }
+            });
+        case ActionTypes.ERROR_UPDATE:
+            return Object.assign({}, state, {
+                error: action.error
+            });
+        default:
+            return Object.assign({}, state, {});
     }
 
-    handleOptionsUpdate = (options) => {
-        this.setState({ options: options });
-    }
+};
 
-    handleShaderErrorState = (e) => {
-        this.setState({ error: e });
-    }
+const store = createStore(reducer, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
 
-    autosave = () => {
-        this.storage.autosave = this.state.source;
-        window.setTimeout(this.autosave, 120000);
-    }
+const autosave = () => {
+    debugger
+    window.localStorage.autosave = store.getState().source;
+    window.setTimeout(this.autosave, 120000);
+}
 
-    constructor(props) {
-        super(props);
-        // need a valid shader on the first frame. otherwise we crash because the
-        // handler for the shader compiler editor is not set up yet.
-        this.state = { source: DEFAULT_FRAG_SHADER };
-    }
+window.setTimeout(autosave, 120000);
 
-    componentDidMount() {
-        this.storage = window.localStorage;
-        const initialState = this.storage.autosave ? this.storage.autosave : DEFAULT_FRAG_SHADER;
-        // lastCharacter is ; as a hack to force first frame render
-        // temporary until we have control of forcing a compile from the outside
-        this.setState({ source: initialState, lastCharacter: ';' });
-        window.setTimeout(this.autosave, 120000);
-    }
-
-    render() {
-        return (
+export default () => {
+    return (
+    <Provider store={ store }>
         <div className="App">
-            <Editor
-                source={ this.state.source }
-                handleSourceCodeUpdate={ this.handleSourceCodeUpdate }
-                error={ this.state.error }
-            />
-            <GlslCanvas
-                width="800"
-                height="1000"
-                overSample="2"
-                fragmentString={ this.state.source }
-                lastCharacter={ this.state.lastCharacter }
-                handleShaderErrorState={ this.handleShaderErrorState }
-            />
+            <EditorContainer />
+            <GlslCanvasContainer />
         </div>
-        );
-    }
+    </Provider>
+    );
 }
