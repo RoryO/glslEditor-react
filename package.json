@@ -5,6 +5,8 @@
   "dependencies": {
     "codemirror": "^5.35.0",
     "glslCanvas": "^0.0.25",
+    "material-ui": "^1.0.0-beta.34",
+    "material-ui-icons": "^1.0.0-beta.17",
     "lodash": "^4.17.5",
     "react": "^16.2.0",
     "react-codemirror2": "^4.0.0",

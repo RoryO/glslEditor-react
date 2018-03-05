@@ -14,3 +14,9 @@ export const compileError = (error) => {
         error: error
     }
 }
+
+export const toggleDrawer = () => {
+    return {
+        type: ActionTypes.TOGGLE_DRAWER
+    }
+}
