@@ -4,9 +4,27 @@ import { createStore } from 'redux';
 
 import EditorContainer from './containers/EditorContainer';
 import GlslCanvasContainer from './containers/GlslCanvasContainer';
+import SettingDrawerContainer from './containers/SettingDrawerContainer';
+import ToolbarContainer from './containers/ToolbarContainer';
+
 import * as ActionTypes from './ActionTypes';
 
+import Reboot from 'material-ui/Reboot';
+
+import { MuiThemeProvider, createMuiTheme } from 'material-ui/styles';
+import blueGrey from 'material-ui/colors/blueGrey';
+import green from 'material-ui/colors/green';
+
 import './App.css';
+const theme = createMuiTheme({
+  palette: {
+    primary: blueGrey,
+    secondary: green,
+  },
+  status: {
+    danger: 'orange',
+  },
+});
 
 const DEFAULT_FRAG_SHADER = `// Author:
 // Title:
@@ -37,6 +55,9 @@ const initialState = {
         width: 800,
         height: 1000,
         overSample: 2
+    },
+    ui: {
+        drawerOpen: false
     }
 };
 
@@ -60,6 +81,10 @@ const reducer = (state, action) => {
             return Object.assign({}, state, {
                 error: action.error
             });
+        case ActionTypes.TOGGLE_DRAWER:
+            return Object.assign({}, state, {
+                ui: { drawerOpen: !state.ui.drawerOpen }
+            });
         default:
             return Object.assign({}, state, {});
     }
@@ -78,10 +103,15 @@ window.setTimeout(autosave, 120000);
 export default () => {
     return (
     <Provider store={ store }>
-        <div className="App">
-            <EditorContainer />
-            <GlslCanvasContainer />
-        </div>
+        <MuiThemeProvider theme={ theme } >
+            <Reboot />
+            <div className="App">
+                <ToolbarContainer />
+                <SettingDrawerContainer />
+                <EditorContainer />
+                <GlslCanvasContainer />
+            </div>
+        </MuiThemeProvider>
     </Provider>
     );
 }

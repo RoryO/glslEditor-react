@@ -1,4 +1,5 @@
 import React from 'react';
+import Button from 'material-ui/Button';
 import './Controls.css';
 
 export default class Controls extends React.Component {
@@ -9,9 +10,10 @@ export default class Controls extends React.Component {
             rel="stylesheet" />
             <ul>
             <li>
-            <button onClick={this.props.toggleCallback}>
+            <Button onClick={this.props.toggleCallback}
+                    color="primary">
               <i className="material-icons">{ this.props.paused ? 'play_arrow' : 'pause' }</i>
-            </button>
+            </Button>
             </li>
             </ul>
         </div>
